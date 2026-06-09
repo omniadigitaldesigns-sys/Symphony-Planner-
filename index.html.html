@@ -1,0 +1,2118 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>Symphony - The Ultimate Digital Planner</title> 
+    <!-- Tailwind CSS --> 
+    <script src="https://cdn.tailwindcss.com"></script> 
+    <!-- FontAwesome Icons --> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> 
+    <!-- Google Fonts: Inter & Playfair Display --> 
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600&family=Playfair+Display:ital,wght=0,400;0,600;1,400&display=swap" rel="stylesheet"> 
+    <script> 
+        tailwind.config = { 
+            theme: { 
+                extend: { 
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'], 
+                        serif: ['Playfair Display', 'serif'], 
+                    }, 
+                    colors: { 
+                        planner: { 
+                            sand: '#F7F4F0', 
+                            linen: '#FAF8F5', 
+                            sage: '#8A9A86', 
+                            sagesoft: '#DDE3DB', 
+                            blush: '#E5C1B5', 
+                            blushsoft: '#F4EBE8', 
+                            gold: '#C5A880', 
+                            charcoal: '#333A35', 
+                            clay: '#8C7A6B' 
+                        } 
+                    } 
+                } 
+            } 
+        } 
+    </script> 
+    <style> 
+        body { 
+            background-color: #EFECE6; 
+            background-image: radial-gradient(#DFDAD0 1px, transparent 1px); 
+            background-size: 20px 20px; 
+        } 
+        /* Custom scrollbar for planner pages */ 
+        .planner-scroll::-webkit-scrollbar { 
+            width: 6px; 
+        } 
+        .planner-scroll::-webkit-scrollbar-track { 
+            background: rgba(0, 0, 0, 0.02); 
+        } 
+        .planner-scroll::-webkit-scrollbar-thumb { 
+            background: rgba(138, 154, 134, 0.3); 
+            border-radius: 3px; 
+        } 
+        /* Grid and lined page backgrounds */ 
+        .page-lined { 
+            background-image: linear-gradient(#e5c1b5 1px, transparent 1px); 
+            background-size: 100% 2rem; 
+            line-height: 2rem; 
+        } 
+        .page-grid { 
+            background-size: 20px 20px; 
+            background-image: linear-gradient(to right, rgba(138, 154, 134, 0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(138, 154, 134, 0.08) 1px, transparent 1px); 
+        } 
+        .page-dotted { 
+            background-image: radial-gradient(rgba(138, 154, 134, 0.15) 1px, transparent 1px); 
+            background-size: 20px 20px; 
+        } 
+        /* Ring binder shadows and shapes */ 
+        .binder-ring { 
+            background: linear-gradient(90deg, #d1d5db 0%, #ffffff 50%, #9ca3af 100%); 
+            box-shadow: inset 1px 1px 2px rgba(0,0,0,0.2), 2px 2px 4px rgba(0,0,0,0.15); 
+        } 
+        /* Stylized custom tabs */ 
+        .tab-active { 
+            transform: translateX(4px); 
+            background-color: #FAF8F5 !important; 
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.05); 
+            font-weight: 600; 
+        } 
+    </style> 
+
+    <!-- PROGRESSIVE WEB APP LINKING SCRIPT -->
+    <link rel="manifest" href="manifest.json">
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+          .then(() => console.log('Symphony offline setup complete!'))
+          .catch((err) => console.log('Offline setup failed: ', err));
+      }
+    </script>
+
+</head>
+<body class="min-h-screen text-planner-charcoal font-sans transition-all duration-300">
+
+    <div class="max-w-[1500px] mx-auto p-4 md:p-6 lg:p-8 flex flex-col min-h-screen">
+        
+        <!-- Premium Header Bar -->
+        <header class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+            <div>
+                <h1 class="font-serif text-3xl md:text-4xl text-planner-charcoal tracking-wide flex items-center gap-3">
+                    <span>Symphony</span>
+                    <span class="text-xs font-sans tracking-widest uppercase bg-planner-sage text-white px-2.5 py-1 rounded-full">Academic Year 2026-2027</span>
+                </h1>
+                <p class="text-sm text-planner-clay font-serif italic mt-1">"Aligning your roles with ease, grace, and structure."</p>
+            </div>
+            
+            <!-- Quick utility buttons -->
+            <div class="flex items-center gap-2 flex-wrap justify-center">
+                <button onclick="toggleCanvasDraw()" id="penBtn" class="px-3.5 py-2 bg-white rounded-full border border-gray-200 hover:border-planner-sage hover:bg-planner-sagesoft transition text-xs font-medium flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-pen-nib text-planner-sage"></i> <span>Doodle Mode: Off</span>
+                </button>
+                <button onclick="savePlanner()" class="px-3.5 py-2 bg-planner-sage text-white rounded-full hover:bg-opacity-90 transition text-xs font-medium flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-floppy-disk"></i> Save
+                </button>
+                <button onclick="triggerExport()" class="px-3.5 py-2 bg-white border border-gray-200 text-planner-charcoal rounded-full hover:bg-gray-50 transition text-xs font-medium flex items-center gap-1.5 shadow-sm" title="Download Planner Backup File">
+                    <i class="fa-solid fa-download text-planner-gold"></i> Export Backup
+                </button>
+                <button onclick="triggerImport()" class="px-3.5 py-2 bg-white border border-gray-200 text-planner-charcoal rounded-full hover:bg-gray-50 transition text-xs font-medium flex items-center gap-1.5 shadow-sm" title="Restore Planner from Backup File">
+                    <i class="fa-solid fa-upload text-planner-sage"></i> Import Backup
+                </button>
+                <input type="file" id="importFile" class="hidden" accept=".json" onchange="handleImport(event)">
+                <button onclick="clearPlannerData()" class="px-3 py-2 bg-rose-50 border border-rose-200 text-rose-700 rounded-full hover:bg-rose-100 transition text-xs font-medium flex items-center gap-1.5 shadow-sm" title="Reset Planner Data">
+                    <i class="fa-solid fa-rotate-left"></i> Reset
+                </button>
+            </div>
+        </header>
+
+        <!-- Outer Planner Binder Container -->
+        <div class="flex-1 flex flex-row relative select-none">
+            
+            <!-- LEFT TAB OVERFLOW FOR MOBILE (Toggled by burger menu or visible in desktop) -->
+            <div class="hidden lg:flex flex-col justify-start gap-1 py-6 pr-1 relative z-10 w-28 text-right">
+                <span class="text-[10px] font-bold tracking-widest text-planner-clay uppercase mb-3 pr-2 border-r border-planner-sage/20">Navigate</span>
+                <button onclick="switchTab('dashboard')" id="tab-dashboard" class="py-2.5 px-3 bg-planner-sage/10 hover:bg-planner-sagesoft rounded-l-lg transition text-xs font-semibold uppercase tracking-wider text-planner-clay hover:text-planner-charcoal mb-1 border-r-2 border-transparent">
+                    <i class="fa-solid fa-house mr-1 text-[10px]"></i> Index
+                </button>
+                <button onclick="switchTab('monthly')" id="tab-monthly" class="py-2.5 px-3 bg-planner-sage/10 hover:bg-planner-sagesoft rounded-l-lg transition text-xs font-semibold uppercase tracking-wider text-planner-clay hover:text-planner-charcoal mb-1 border-r-2 border-transparent">
+                    <i class="fa-solid fa-calendar-days mr-1 text-[10px]"></i> Monthly
+                </button>
+                <button onclick="switchTab('weekly')" id="tab-weekly" class="py-2.5 px-3 bg-planner-sage/10 hover:bg-planner-sagesoft rounded-l-lg transition text-xs font-semibold uppercase tracking-wider text-planner-clay hover:text-planner-charcoal mb-1 border-r-2 border-transparent">
+                    <i class="fa-solid fa-calendar-week mr-1 text-[10px]"></i> Weekly
+                </button>
+                <button onclick="switchTab('academic')" id="tab-academic" class="py-2.5 px-3 bg-planner-sage/10 hover:bg-planner-sagesoft rounded-l-lg transition text-xs font-semibold uppercase tracking-wider text-planner-clay hover:text-planner-charcoal mb-1 border-r-2 border-transparent">
+                    <i class="fa-solid fa-graduation-cap mr-1 text-[10px]"></i> Academic
+                </button>
+                <button onclick="switchTab('family')" id="tab-family" class="py-2.5 px-3 bg-planner-sage/10 hover:bg-planner-sagesoft rounded-l-lg transition text-xs font-semibold uppercase tracking-wider text-planner-clay hover:text-planner-charcoal mb-1 border-r-2 border-transparent">
+                    <i class="fa-solid fa-hands-holding-child mr-1 text-[10px]"></i> Family
+                </button>
+                <button onclick="switchTab('meals')" id="tab-meals" class="py-2.5 px-3 bg-planner-sage/10 hover:bg-planner-sagesoft rounded-l-lg transition text-xs font-semibold uppercase tracking-wider text-planner-clay hover:text-planner-charcoal mb-1 border-r-2 border-transparent">
+                    <i class="fa-solid fa-utensils mr-1 text-[10px]"></i> Meals
+                </button>
+                <button onclick="switchTab('wellness')" id="tab-wellness" class="py-2.5 px-3 bg-planner-sage/10 hover:bg-planner-sagesoft rounded-l-lg transition text-xs font-semibold uppercase tracking-wider text-planner-clay hover:text-planner-charcoal mb-1 border-r-2 border-transparent">
+                    <i class="fa-solid fa-heart mr-1 text-[10px]"></i> Wellness
+                </button>
+                <button onclick="switchTab('finance')" id="tab-finance" class="py-2.5 px-3 bg-planner-sage/10 hover:bg-planner-sagesoft rounded-l-lg transition text-xs font-semibold uppercase tracking-wider text-planner-clay hover:text-planner-charcoal mb-1 border-r-2 border-transparent">
+                    <i class="fa-solid fa-wallet mr-1 text-[10px]"></i> Finance
+                </button>
+                <button onclick="switchTab('notes')" id="tab-notes" class="py-2.5 px-3 bg-planner-sage/10 hover:bg-planner-sagesoft rounded-l-lg transition text-xs font-semibold uppercase tracking-wider text-planner-clay hover:text-planner-charcoal mb-1 border-r-2 border-transparent">
+                    <i class="fa-solid fa-note-sticky mr-1 text-[10px]"></i> Templates
+                </button>
+            </div>
+
+            <!-- The Dual-Page Simulated Binder -->
+            <div id="plannerBinder" class="flex-1 bg-planner-sand rounded-2xl shadow-2xl border-4 border-planner-clay/10 p-4 md:p-6 lg:p-8 flex flex-col md:flex-row gap-4 relative overflow-hidden min-h-[750px] lg:min-h-[850px]">
+                
+                <!-- CANVAS DOODLE WRAPPER (GoodNotes/Notability Overlay) -->
+                <div id="canvasContainer" class="absolute inset-0 pointer-events-none z-30 hidden">
+                    <canvas id="doodleCanvas" class="w-full h-full pointer-events-auto cursor-crosshair"></canvas>
+                    <!-- Pencil controls hovering overlay -->
+                    <div class="absolute top-4 left-1/2 -translate-x-1/2 bg-white px-4 py-2 rounded-full shadow-lg border border-gray-100 flex items-center gap-4 pointer-events-auto flex-wrap max-w-sm sm:max-w-none justify-center">
+                        <span class="text-xs font-semibold text-planner-clay flex items-center gap-2"><i class="fa-solid fa-paintbrush"></i> Canvas Pen Tools:</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="setPenColor('#8A9A86')" class="w-5 h-5 rounded-full bg-planner-sage border border-black/20" title="Sage"></button>
+                            <button onclick="setPenColor('#E5C1B5')" class="w-5 h-5 rounded-full bg-planner-blush border border-black/20" title="Blush"></button>
+                            <button onclick="setPenColor('#C5A880')" class="w-5 h-5 rounded-full bg-planner-gold border border-black/20" title="Gold"></button>
+                            <button onclick="setPenColor('#333A35')" class="w-5 h-5 rounded-full bg-planner-charcoal border border-black/20" title="Charcoal"></button>
+                            <button onclick="setPenColor('#ef4444')" class="w-5 h-5 rounded-full bg-red-500 border border-black/20" title="Red Alert"></button>
+                        </div>
+                        <div class="h-4 w-[1px] bg-gray-200 hidden sm:block"></div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="setPenWidth(2)" class="text-xs px-2 py-0.5 rounded hover:bg-gray-100 font-medium">Fine</button>
+                            <button onclick="setPenWidth(5)" class="text-xs px-2 py-0.5 rounded hover:bg-gray-100 font-bold">Medium</button>
+                            <button onclick="setPenWidth(10)" class="text-xs px-2 py-0.5 rounded hover:bg-gray-100 font-black">Thick</button>
+                        </div>
+                        <div class="h-4 w-[1px] bg-gray-200 hidden sm:block"></div>
+                        <button onclick="clearCanvas()" class="text-xs font-semibold text-rose-600 hover:text-rose-800 flex items-center gap-1">
+                            <i class="fa-solid fa-eraser"></i> Clear Drawing
+                        </button>
+                    </div>
+                </div>
+
+                <!-- LEFT PAGE -->
+                <div class="flex-1 bg-planner-linen rounded-xl shadow-inner border border-black/5 p-4 md:p-6 flex flex-col justify-between overflow-y-auto planner-scroll relative min-h-[350px] md:min-h-0">
+                    <div id="left-page-content" class="h-full flex flex-col justify-between">
+                        <!-- Content injected via JavaScript dynamically -->
+                    </div>
+                </div>
+
+                <!-- CENTRAL RING BINDER OVERLAY (Visual representation of binder) -->
+                <div class="hidden md:flex flex-col justify-around items-center w-6 h-full absolute left-1/2 -translate-x-1/2 top-0 pointer-events-none z-20">
+                    <div class="w-1.5 h-full bg-planner-clay/10 absolute left-1/2 -translate-x-1/2"></div>
+                    <!-- Repeated Rings -->
+                    <div class="w-10 h-4 binder-ring rounded-full my-2"></div>
+                    <div class="w-10 h-4 binder-ring rounded-full my-2"></div>
+                    <div class="w-10 h-4 binder-ring rounded-full my-2"></div>
+                    <div class="w-10 h-4 binder-ring rounded-full my-2"></div>
+                    <div class="w-10 h-4 binder-ring rounded-full my-2"></div>
+                    <div class="w-10 h-4 binder-ring rounded-full my-2"></div>
+                    <div class="w-10 h-4 binder-ring rounded-full my-2"></div>
+                    <div class="w-10 h-4 binder-ring rounded-full my-2"></div>
+                    <div class="w-10 h-4 binder-ring rounded-full my-2"></div>
+                    <div class="w-10 h-4 binder-ring rounded-full my-2"></div>
+                </div>
+
+                <!-- RIGHT PAGE -->
+                <div class="flex-1 bg-planner-linen rounded-xl shadow-inner border border-black/5 p-4 md:p-6 flex flex-col justify-between overflow-y-auto planner-scroll relative min-h-[350px] md:min-h-0">
+                    <div id="right-page-content" class="h-full flex flex-col justify-between">
+                        <!-- Content injected via JavaScript dynamically -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- MOBILE / SMALL SCREEN BOTTOM TAB NAVIGATION BAR -->
+            <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-xl px-4 py-2.5 flex justify-around items-center z-40">
+                <button onclick="switchTab('dashboard')" class="flex flex-col items-center gap-0.5 text-planner-clay hover:text-planner-sage">
+                    <i class="fa-solid fa-house text-sm"></i>
+                    <span class="text-[9px] font-semibold">Index</span>
+                </button>
+                <button onclick="switchTab('monthly')" class="flex flex-col items-center gap-0.5 text-planner-clay hover:text-planner-sage">
+                    <i class="fa-solid fa-calendar-days text-sm"></i>
+                    <span class="text-[9px] font-semibold">Month</span>
+                </button>
+                <button onclick="switchTab('weekly')" class="flex flex-col items-center gap-0.5 text-planner-clay hover:text-planner-sage">
+                    <i class="fa-solid fa-calendar-week text-sm"></i>
+                    <span class="text-[9px] font-semibold">Week</span>
+                </button>
+                <button onclick="switchTab('academic')" class="flex flex-col items-center gap-0.5 text-planner-clay hover:text-planner-sage">
+                    <i class="fa-solid fa-graduation-cap text-sm"></i>
+                    <span class="text-[9px] font-semibold">Acad</span>
+                </button>
+                <button onclick="switchTab('family')" class="flex flex-col items-center gap-0.5 text-planner-clay hover:text-planner-sage">
+                    <i class="fa-solid fa-hands-holding-child text-sm"></i>
+                    <span class="text-[9px] font-semibold">Family</span>
+                </button>
+                <button onclick="switchTab('meals')" class="flex flex-col items-center gap-0.5 text-planner-clay hover:text-planner-sage">
+                    <i class="fa-solid fa-utensils text-sm"></i>
+                    <span class="text-[9px] font-semibold">Meals</span>
+                </button>
+                <button onclick="switchTab('wellness')" class="flex flex-col items-center gap-0.5 text-planner-clay hover:text-planner-sage">
+                    <i class="fa-solid fa-heart text-sm"></i>
+                    <span class="text-[9px] font-semibold">Well</span>
+                </button>
+                <button onclick="switchTab('finance')" class="flex flex-col items-center gap-0.5 text-planner-clay hover:text-planner-sage">
+                    <i class="fa-solid fa-wallet text-sm"></i>
+                    <span class="text-[9px] font-semibold">Coins</span>
+                </button>
+                <button onclick="switchTab('notes')" class="flex flex-col items-center gap-0.5 text-planner-clay hover:text-planner-sage">
+                    <i class="fa-solid fa-note-sticky text-sm"></i>
+                    <span class="text-[9px] font-semibold">Notes</span>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Custom Modals Container -->
+        <div id="plannerModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+            <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-planner-sagesoft relative">
+                <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-times text-lg"></i>
+                </button>
+                <div id="modal-content"></div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications System -->
+        <div id="toast" class="fixed top-6 right-6 z-50 bg-planner-sage text-white px-5 py-3 rounded-full shadow-lg flex items-center gap-2 transform translate-y-12 opacity-0 pointer-events-none transition-all duration-300">
+            <i class="fa-solid fa-circle-check"></i>
+            <span id="toast-text">Success message</span>
+        </div>
+
+        <footer class="mt-8 mb-16 lg:mb-4 text-center text-xs text-planner-clay/80 flex flex-col items-center gap-2">
+            <p>© 2026 Symphony Planner Co. Designed for peace, beauty, and structure. Autosaver Active.</p>
+        </footer>
+
+    </div>
+
+    <script>
+        // Core persistent state model
+        let state = {
+            currentTab: 'dashboard',
+            currentMonthIndex: 2, // Default: October (Academic Month 3, Aug is index 0)
+            notesText: {}, // key: id, val: string
+            checklistData: {}, // key: id, val: object {item: state}
+            habitsData: {}, // key: date/week ID, val: array of habit tracking state
+            holidays: {
+                0: [{ day: 15, name: "Mid-term prep" }],
+                1: [{ day: 7, name: "Labor Day" }],
+                2: [{ day: 12, name: "Indigenous Peoples' Day" }],
+                3: [{ day: 26, name: "Thanksgiving Break" }],
+                4: [{ day: 25, name: "Winter Holiday Recess" }],
+                5: [
+                    { day: 1, name: "New Year's Day" },
+                    { day: 18, name: "MLK Day" }
+                ],
+                6: [{ day: 15, name: "Presidents' Day" }],
+                7: [{ day: 26, name: "Spring Break Starts" }],
+                8: [{ day: 16, name: "Spring Day Out" }],
+                9: [{ day: 31, name: "Memorial Day" }],
+                10: [{ day: 18, name: "Juneteenth / Finals Week" }],
+                11: [{ day: 4, name: "Independence Day" }]
+            },
+            dashboardPriorities: [
+                { id: "dp_1", text: "Publish next week's meal calendar", checked: false },
+                { id: "dp_2", text: "Sync child vaccination & dentist records", checked: false },
+                { id: "dp_3", text: "Grade unit midterm essays", checked: false }
+            ],
+            financialData: {
+                income: [
+                    { desc: "Salary / Dividend", amt: 4500 },
+                    { desc: "Tutoring / Side Hustle", amt: 600 }
+                ],
+                expense: [
+                    { desc: "Mortgage / Rent", amt: 1800 },
+                    { desc: "Groceries", amt: 650 },
+                    { desc: "Subscriptions", amt: 120 },
+                    { desc: "Family Outing", amt: 250 }
+                ],
+                savingsGoal: 1000,
+                savingsCurrent: 450
+            },
+            mealsData: {
+                meals: {}, // Day to dish
+                groceryList: [
+                    { id: 1, item: "Organic spinach", checked: false },
+                    { id: 2, item: "Fresh salmon", checked: false },
+                    { id: 3, item: "Oat milk", checked: true },
+                    { id: 4, item: "Honeycrisp apples", checked: false }
+                ]
+            },
+            schoolData: {
+                classes: [
+                    { time: "09:00 AM", mon: "AP History Prep", tue: "AP History Prep", wed: "Office Hours", thu: "AP History Prep", fri: "Grading Block" },
+                    { time: "11:30 AM", mon: "Literacy Blocks", tue: "Staff Meeting", wed: "Literacy Blocks", thu: "Parent Calls", fri: "Reading Circle" },
+                    { time: "02:00 PM", mon: "Curriculum Dev", tue: "Math Foundations", wed: "Curriculum Dev", thu: "Math Foundations", fri: "Co-planning" }
+                ],
+                assignments: [
+                    { name: "Grading: Term Paper Set A", type: "Teacher", due: "2026-10-15", progress: 60, status: "Ongoing" },
+                    { name: "Courseware Curriculum Review", type: "Teacher", due: "2026-10-22", progress: 20, status: "Planned" },
+                    { name: "AP Syllabus Alignment", type: "Student/Teacher", due: "2026-10-10", progress: 100, status: "Done" }
+                ],
+                lessons: [
+                    { unit: "American Revolution", objective: "Identify fundamental economic grievances leading up to 1776", resources: "Primary Letters, Tea Party Analysis Handout", notes: "Ensure discussion breaks into 4-person groups." }
+                ]
+            },
+            familyData: {
+                medicals: [
+                    { person: "Leo (Son)", event: "Dental Checkup", date: "2026-10-12" },
+                    { person: "Self", event: "Annual Physical Checkup", date: "2026-11-05" }
+                ],
+                forms: [
+                    { name: "Field Trip Consent Form", person: "Leo", completed: true },
+                    { name: "Emergency Contact Updates", person: "Maya", completed: false }
+                ],
+                sizes: [
+                    { person: "Leo", age: "6 yrs", clothes: "Youth S / 6T", shoes: "Youth 12" },
+                    { person: "Maya", age: "9 yrs", clothes: "Youth M / 8-10", shoes: "Youth 2" }
+                ],
+                cleaning: [
+                    { task: "Sanitize kitchen counters & sink", frequency: "Daily", status: "Done" },
+                    { task: "Wipe microwave & sweep pantry", frequency: "Weekly", status: "Todo" },
+                    { task: "Deep steam carpets & polish trim", frequency: "Monthly", status: "Todo" }
+                ]
+            },
+            wellnessData: {
+                hydration: 4, // 1 to 8 glasses
+                sleep: 7.5, // hrs
+                mood: 'peaceful', // happy, peaceful, tired, stressed
+                affirmation: "I am anchoring myself in the calm, knowing I can build a structural path forward."
+            }
+        };
+
+        const AcademicMonths = [
+            { name: "August 2026", days: 31, startDay: 6 },
+            { name: "September 2026", days: 30, startDay: 2 },
+            { name: "October 2026", days: 31, startDay: 4 },
+            { name: "November 2026", days: 30, startDay: 0 },
+            { name: "December 2026", days: 31, startDay: 2 },
+            { name: "January 2027", days: 31, startDay: 5 },
+            { name: "February 2027", days: 28, startDay: 1 },
+            { name: "March 2027", days: 31, startDay: 1 },
+            { name: "April 2027", days: 30, startDay: 4 },
+            { name: "May 2027", days: 31, startDay: 6 },
+            { name: "June 2027", days: 30, startDay: 2 },
+            { name: "July 2027", days: 31, startDay: 4 }
+        ];
+
+        // Load planner storage data
+        function loadPlannerData() {
+            const savedData = localStorage.getItem('symphony_planner_save');
+            if (savedData) {
+                try {
+                    state = JSON.parse(savedData);
+                    // Legacy migration for holidays
+                    if (!state.holidays) {
+                        state.holidays = {
+                            0: [{ day: 15, name: "Mid-term prep" }],
+                            1: [{ day: 7, name: "Labor Day" }],
+                            2: [{ day: 12, name: "Indigenous Peoples' Day" }],
+                            3: [{ day: 26, name: "Thanksgiving Break" }],
+                            4: [{ day: 25, name: "Winter Holiday Recess" }],
+                            5: [
+                                { day: 1, name: "New Year's Day" },
+                                { day: 18, name: "MLK Day" }
+                            ],
+                            6: [{ day: 15, name: "Presidents' Day" }],
+                            7: [{ day: 26, name: "Spring Break Starts" }],
+                            8: [{ day: 16, name: "Spring Day Out" }],
+                            9: [{ day: 31, name: "Memorial Day" }],
+                            10: [{ day: 18, name: "Juneteenth / Finals Week" }],
+                            11: [{ day: 4, name: "Independence Day" }]
+                        };
+                    }
+                    // Legacy migration for customizable dashboard priority focus
+                    if (!state.dashboardPriorities) {
+                        state.dashboardPriorities = [
+                            { id: "dp_1", text: "Publish next week's meal calendar", checked: false },
+                            { id: "dp_2", text: "Sync child vaccination & dentist records", checked: false },
+                            { id: "dp_3", text: "Grade unit midterm essays", checked: false }
+                        ];
+                    }
+                } catch (e) {
+                    console.error("Error loading saved state. Resetting to default.", e);
+                }
+            }
+        }
+
+        // Auto Save to storage
+        function savePlanner(silent = false) {
+            localStorage.setItem('symphony_planner_save', JSON.stringify(state));
+            if (!silent) {
+                showToast("Planner saved securely!");
+            }
+        }
+
+        // Beautiful custom Modal Confirm logic
+        function clearPlannerData() {
+            openCustomConfirm(
+                "Reset Planner Data",
+                "Are you sure you want to reset all your beautiful customization? This will wipe your calendars, habit trackers, and notes. This cannot be undone.",
+                () => {
+                    localStorage.removeItem('symphony_planner_save');
+                    localStorage.removeItem('symphony_planner_drawings');
+                    window.location.reload();
+                }
+            );
+        }
+
+        function triggerExport() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "symphony_planner_backup.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast("Backup exported successfully!");
+        }
+
+        function triggerImport() {
+            document.getElementById('importFile').click();
+        }
+
+        function handleImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedState = JSON.parse(e.target.result);
+                    // Basic structural check
+                    if (importedState && typeof importedState === 'object' && 'currentTab' in importedState) {
+                        state = importedState;
+                        savePlanner(true);
+                        switchTab(state.currentTab);
+                        showToast("Planner backup restored!");
+                    } else {
+                        openCustomAlert("Import Failed", "The uploaded file is not a valid Symphony Planner backup file.");
+                    }
+                } catch (err) {
+                    openCustomAlert("Import Error", "Could not parse backup file. Make sure it is a valid backup .json file.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function showToast(text) {
+            const el = document.getElementById('toast');
+            document.getElementById('toast-text').innerText = text;
+            el.classList.remove('translate-y-12', 'opacity-0');
+            el.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                el.classList.add('translate-y-12', 'opacity-0');
+                el.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        // Generic field updates linked to localStorage state auto-save
+        function handleFieldBlur(key, elem) {
+            const val = elem.value || elem.innerText;
+            state.notesText[key] = val;
+            savePlanner(true);
+        }
+
+        function handleCheckboxToggle(key, val) {
+            state.checklistData[key] = val;
+            savePlanner(true);
+        }
+
+        // Active State Tab Switch
+        function switchTab(tabId) {
+            state.currentTab = tabId;
+            
+            // Adjust sidebar tabs UI styling
+            document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+                btn.classList.remove('tab-active');
+            });
+            const activeTabButton = document.getElementById(`tab-${tabId}`);
+            if (activeTabButton) {
+                activeTabButton.classList.add('tab-active');
+            }
+
+            renderCurrentTab();
+            savePlanner(true);
+        }
+
+        // Main view engine rendering Left and Right binder pages
+        function renderCurrentTab() {
+            const leftEl = document.getElementById('left-page-content');
+            const rightEl = document.getElementById('right-page-content');
+            
+            // Reset page themes
+            leftEl.parentElement.className = leftEl.parentElement.className.replace(/page-(lined|grid|dotted)/g, '');
+            rightEl.parentElement.className = rightEl.parentElement.className.replace(/page-(lined|grid|dotted)/g, '');
+
+            switch (state.currentTab) {
+                case 'dashboard':
+                    renderDashboard(leftEl, rightEl);
+                    break;
+                case 'monthly':
+                    renderMonthly(leftEl, rightEl);
+                    break;
+                case 'weekly':
+                    renderWeekly(leftEl, rightEl);
+                    break;
+                case 'academic':
+                    renderAcademic(leftEl, rightEl);
+                    break;
+                case 'family':
+                    renderFamily(leftEl, rightEl);
+                    break;
+                case 'meals':
+                    renderMeals(leftEl, rightEl);
+                    break;
+                case 'wellness':
+                    renderWellness(leftEl, rightEl);
+                    break;
+                case 'finance':
+                    renderFinance(leftEl, rightEl);
+                    break;
+                case 'notes':
+                    renderNotes(leftEl, rightEl);
+                    break;
+            }
+        }
+
+        /* Index / Dashboard Builder */
+        function renderDashboard(left, right) {
+            // Left Page: Welcome index, affirmations, and Quick Directory links
+            left.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="border-b border-planner-blush pb-3 mb-4">
+                            <span class="text-xs font-semibold tracking-widest text-planner-clay uppercase">Welcome back, Sanctuary</span>
+                            <h2 class="font-serif text-3xl text-planner-charcoal mt-1">Life Master Dashboard</h2>
+                        </div>
+                        
+                        <div class="bg-planner-blushsoft/40 p-4 rounded-xl border border-planner-blush/20 mb-5 text-sm italic relative">
+                            <span class="absolute -top-3 left-4 bg-planner-blush px-2 py-0.5 text-[10px] text-white rounded font-serif uppercase tracking-wider">Today's Reflection</span>
+                            <textarea onblur="state.wellnessData.affirmation = this.value; savePlanner(true);" class="w-full bg-transparent resize-none border-none outline-none focus:ring-0 font-serif leading-relaxed text-planner-charcoal/90 text-sm py-2" rows="3">${state.wellnessData.affirmation}</textarea>
+                            <span class="block text-right text-[10px] text-planner-clay/60">— Tap to edit your custom intention</span>
+                        </div>
+
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-bold tracking-widest text-planner-sage uppercase">Quick Planner Map</h4>
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <a onclick="switchTab('monthly')" class="flex items-center gap-2 p-2 rounded-lg bg-white/70 border border-gray-100 hover:border-planner-sage hover:bg-planner-sagesoft transition cursor-pointer">
+                                    <i class="fa-solid fa-calendar text-planner-sage text-base"></i>
+                                    <div>
+                                        <p class="font-bold">Monthly Spread</p>
+                                        <p class="text-[10px] text-planner-clay">Calendar & Vision</p>
+                                    </div>
+                                </a>
+                                <a onclick="switchTab('weekly')" class="flex items-center gap-2 p-2 rounded-lg bg-white/70 border border-gray-100 hover:border-planner-sage hover:bg-planner-sagesoft transition cursor-pointer">
+                                    <i class="fa-solid fa-calendar-week text-planner-blush text-base"></i>
+                                    <div>
+                                        <p class="font-bold">Weekly Harmonizer</p>
+                                        <p class="text-[10px] text-planner-clay">Tasks & Habits</p>
+                                    </div>
+                                </a>
+                                <a onclick="switchTab('academic')" class="flex items-center gap-2 p-2 rounded-lg bg-white/70 border border-gray-100 hover:border-planner-sage hover:bg-planner-sagesoft transition cursor-pointer">
+                                    <i class="fa-solid fa-graduation-cap text-planner-gold text-base"></i>
+                                    <div>
+                                        <p class="font-bold">Academic Hub</p>
+                                        <p class="text-[10px] text-planner-clay">For Teachers & Students</p>
+                                    </div>
+                                </a>
+                                <a onclick="switchTab('family')" class="flex items-center gap-2 p-2 rounded-lg bg-white/70 border border-gray-100 hover:border-planner-sage hover:bg-planner-sagesoft transition cursor-pointer">
+                                    <i class="fa-solid fa-hands-holding-child text-sky-400 text-base"></i>
+                                    <div>
+                                        <p class="font-bold">Family Center</p>
+                                        <p class="text-[10px] text-planner-clay">Kids, Chores, Medical</p>
+                                    </div>
+                                </a>
+                                <a onclick="switchTab('meals')" class="flex items-center gap-2 p-2 rounded-lg bg-white/70 border border-gray-100 hover:border-planner-sage hover:bg-planner-sagesoft transition cursor-pointer">
+                                    <i class="fa-solid fa-utensils text-planner-clay text-base"></i>
+                                    <div>
+                                        <p class="font-bold">Meal & Grocery</p>
+                                        <p class="text-[10px] text-planner-clay">Menu Planning Matrix</p>
+                                    </div>
+                                </a>
+                                <a onclick="switchTab('finance')" class="flex items-center gap-2 p-2 rounded-lg bg-white/70 border border-gray-100 hover:border-planner-sage hover:bg-planner-sagesoft transition cursor-pointer">
+                                    <i class="fa-solid fa-wallet text-emerald-500 text-base"></i>
+                                    <div>
+                                        <p class="font-bold">Finance Log</p>
+                                        <p class="text-[10px] text-planner-clay">Ledger & Budgets</p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-planner-sagesoft flex justify-between items-center text-[10px] text-planner-clay">
+                        <span>Version 4.5 Pro Digital</span>
+                        <span>Interactive Hyperlinks Enabled</span>
+                    </div>
+                </div>
+            `;
+
+            // Right Page: Customizable Priority Focus List & Fast Brain Dump Note Widget
+            const dashboardNoteId = "dashboard_braindump";
+            const noteContent = state.notesText[dashboardNoteId] || "";
+
+            // Dynamic interactive priority list items
+            const priorityRowsHTML = state.dashboardPriorities.map((item, idx) => `
+                <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-gray-100 hover:shadow-sm transition group">
+                    <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                        <input type="checkbox" onchange="togglePriorityCheck(${idx}, this.checked)" ${item.checked ? 'checked' : ''} class="w-4 h-4 text-planner-sage rounded border-gray-300 focus:ring-planner-sage cursor-pointer">
+                        <input type="text" onblur="updatePriorityText(${idx}, this.value)" class="text-xs text-planner-charcoal bg-transparent border-none p-0 outline-none focus:ring-0 flex-1 min-w-0 ${item.checked ? 'line-through text-gray-400 font-light' : ''}" value="${item.text}">
+                    </div>
+                    <button onclick="deletePriority(${idx})" class="text-gray-300 hover:text-rose-500 transition text-[11px] ml-2 opacity-0 group-hover:opacity-100" title="Delete Task">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            right.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="border-b border-planner-sage pb-3 mb-4 flex justify-between items-center">
+                            <h3 class="font-serif text-2xl text-planner-charcoal">Quick Vision Board</h3>
+                            <span class="text-xs bg-planner-sage/10 text-planner-sage px-2 py-0.5 rounded font-medium">Daily Hub</span>
+                        </div>
+                        
+                        <div class="mb-5">
+                            <div class="flex justify-between items-center mb-2">
+                                <p class="text-xs font-bold uppercase tracking-widest text-planner-clay">Today's Priority Focus</p>
+                                <span class="text-[9px] text-planner-clay/60 italic">Tap to rename</span>
+                            </div>
+                            <div class="space-y-2 mb-3">
+                                ${priorityRowsHTML || '<p class="text-xs text-center py-4 italic text-gray-400">All tasks completed! Add more goals below.</p>'}
+                            </div>
+                            <!-- Inline add priority task form -->
+                            <div class="flex gap-2">
+                                <input id="new-priority-input" type="text" class="px-3.5 py-1.5 border border-planner-sagesoft rounded-full text-xs flex-1" placeholder="Add urgent task...">
+                                <button onclick="addPriority()" class="px-3.5 py-1.5 bg-planner-sage text-white rounded-full text-[10px] font-bold hover:bg-opacity-90 transition">Add</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-widest text-planner-clay mb-2">Thoughts & Brain Spark</p>
+                            <div class="relative bg-amber-50/40 p-3 rounded-lg border border-amber-100">
+                                <textarea id="${dashboardNoteId}" onblur="handleFieldBlur('${dashboardNoteId}', this)" 
+                                    class="w-full h-40 bg-transparent outline-none border-none text-sm leading-relaxed text-planner-charcoal placeholder-planner-clay/50 font-sans" 
+                                    placeholder="Spill your ideas, sticky notes, phone numbers, or warm memories here...">${noteContent}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-planner-linen py-2 px-3 rounded border border-planner-clay/15 text-center text-xs italic text-planner-clay mt-2">
+                        "Your peace of mind is your true superpower."
+                    </div>
+                </div>
+            `;
+            initCheckboxes();
+        }
+
+        function togglePriorityCheck(idx, isChecked) {
+            state.dashboardPriorities[idx].checked = isChecked;
+            savePlanner(true);
+            renderCurrentTab();
+        }
+
+        function updatePriorityText(idx, val) {
+            const txt = val.trim();
+            if (txt) {
+                state.dashboardPriorities[idx].text = txt;
+                savePlanner(true);
+            } else {
+                renderCurrentTab(); // Restore text if user leaves empty
+            }
+        }
+
+        function addPriority() {
+            const input = document.getElementById('new-priority-input');
+            const txt = input.value.trim();
+            if (txt) {
+                state.dashboardPriorities.push({
+                    id: "dp_" + Date.now(),
+                    text: txt,
+                    checked: false
+                });
+                savePlanner(true);
+                renderCurrentTab();
+            }
+        }
+
+        function deletePriority(idx) {
+            state.dashboardPriorities.splice(idx, 1);
+            savePlanner(true);
+            renderCurrentTab();
+        }
+
+        /* Monthly Calendar Planner Spread Engine */
+        function renderMonthly(left, right) {
+            const currentMonth = AcademicMonths[state.currentMonthIndex];
+            const currentMonthIndex = state.currentMonthIndex;
+            const monthHolidays = state.holidays[currentMonthIndex] || [];
+            
+            // Build Left Page: Month Header, Nav, intentions, dynamic holiday list, and Notes block
+            let holidaysHTML = monthHolidays.map((hol, idx) => `
+                <div class="flex items-center justify-between text-[11px] bg-planner-blushsoft/30 px-2 py-1 rounded border border-planner-blush/10 hover:border-planner-blush/40 transition group">
+                    <span class="font-medium text-planner-charcoal/90 truncate mr-1">
+                        <span class="font-bold text-planner-sage">${hol.day}th:</span> ${hol.name}
+                    </span>
+                    <button onclick="deleteHoliday(${currentMonthIndex}, ${idx})" class="text-rose-400 hover:text-rose-600 transition ml-2" title="Delete Holiday">
+                        <i class="fa-solid fa-trash text-[10px]"></i>
+                    </button>
+                </div>
+            `).join('');
+            
+            if (monthHolidays.length === 0) {
+                holidaysHTML = `<p class="text-[10px] text-gray-400 italic py-2 text-center">No holidays set for this month.</p>`;
+            }
+
+            let leftHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="flex items-center justify-between border-b border-planner-blush pb-3 mb-4">
+                            <div class="flex items-center gap-3">
+                                <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:bg-planner-sagesoft text-sm"><i class="fa-solid fa-chevron-left"></i></button>
+                                <h2 class="font-serif text-3xl text-planner-charcoal">${currentMonth.name}</h2>
+                                <button onclick="changeMonth(1)" class="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:bg-planner-sagesoft text-sm"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Intention Box -->
+                        <div class="bg-planner-blushsoft/30 p-3 rounded-xl border border-planner-blush/20 mb-4">
+                            <p class="text-[10px] font-bold tracking-wider uppercase text-planner-clay">Monthly Primary Intentions & Focus</p>
+                            <textarea id="monthly_focus_${state.currentMonthIndex}" onblur="handleFieldBlur('monthly_focus_${state.currentMonthIndex}', this)" 
+                                class="w-full bg-transparent border-none outline-none focus:ring-0 text-sm font-sans mt-1 resize-none" rows="2" placeholder="My goals for this month...">${state.notesText['monthly_focus_' + state.currentMonthIndex] || ""}</textarea>
+                        </div>
+
+                        <!-- Side-by-Side Reference & Customizable Holidays -->
+                        <div class="grid grid-cols-2 gap-3 text-xs mb-4">
+                            <div class="p-2.5 bg-white/60 border border-gray-100 rounded-lg flex flex-col justify-between">
+                                <div>
+                                    <p class="font-semibold text-planner-sage mb-1.5 uppercase tracking-wider text-[9px] flex justify-between items-center border-b border-planner-sage/10 pb-1">
+                                        <span><i class="fa-solid fa-snowflake mr-1"></i> US Holidays</span>
+                                        <button onclick="openAddHolidayModal(${currentMonthIndex})" class="text-[9px] text-planner-sage font-extrabold hover:underline" title="Add Custom Holiday">+ Add</button>
+                                    </p>
+                                    <div class="space-y-1.5 max-h-[110px] overflow-y-auto planner-scroll pr-1">
+                                        ${holidaysHTML}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-2.5 bg-white/60 border border-gray-100 rounded-lg">
+                                <p class="font-semibold text-planner-gold mb-1 uppercase tracking-wider text-[9px]"><i class="fa-solid fa-seedling"></i> Quick Mantras</p>
+                                <p class="italic text-planner-clay leading-relaxed text-[11px]">Embrace seasonal rhythm with intentional focus.</p>
+                            </div>
+                        </div>
+
+                        <!-- Sidebar Notes / Brain Dump -->
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-widest text-planner-clay mb-2">Monthly Fluid Brain Dump</p>
+                            <textarea id="monthly_dump_${state.currentMonthIndex}" onblur="handleFieldBlur('monthly_dump_${state.currentMonthIndex}', this)" 
+                                class="w-full h-36 bg-white/80 border border-gray-100 rounded-lg p-2.5 text-xs outline-none focus:ring-1 focus:ring-planner-sage resize-none" 
+                                placeholder="Tasks, lists, or spontaneous reminders...">${state.notesText['monthly_dump_' + state.currentMonthIndex] || ""}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="text-[10px] text-planner-clay text-center italic mt-2">
+                        Click on any individual date box in the right calendar to detail appointments.
+                    </div>
+                </div>
+            `;
+            left.innerHTML = leftHTML;
+
+            // Build Right Page: Massive Interactive Calendar Grid (Days 1 to length)
+            let daysGridHTML = '';
+            
+            // Render Day headers
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            let headersHTML = dayNames.map(d => `<div class="text-center font-semibold text-[10px] uppercase tracking-wider text-planner-clay border-b border-planner-sagesoft/30 pb-1">${d}</div>`).join('');
+
+            // Generate Calendar grids
+            let cells = [];
+            // Padding cells
+            for (let i = 0; i < currentMonth.startDay; i++) {
+                cells.push(`<div class="bg-gray-50/40 p-1 border-r border-b border-gray-100/50 min-h-[75px] text-gray-300"></div>`);
+            }
+
+            // Fill actual days with active reminders and interactive holiday badges
+            for (let d = 1; d <= currentMonth.days; d++) {
+                const dayKey = `month_${state.currentMonthIndex}_day_${d}`;
+                const hasReminder = state.notesText[dayKey] ? true : false;
+                const truncatedContent = state.notesText[dayKey] ? state.notesText[dayKey].substring(0, 15) + '...' : '';
+
+                // Find active holiday if any matches this day
+                const dayHoliday = monthHolidays.find(h => h.day === d);
+                const holidayBadge = dayHoliday ? `
+                    <div class="bg-rose-50 text-rose-700 text-[8px] font-semibold px-1 py-0.5 rounded border border-rose-100 truncate block mt-0.5 mb-1 max-w-full" title="${dayHoliday.name}">
+                        <i class="fa-solid fa-gift text-[7px] mr-0.5"></i>${dayHoliday.name}
+                    </div>
+                ` : '';
+
+                cells.push(`
+                    <div onclick="openDayModal(${d}, '${dayKey}')" class="bg-white hover:bg-planner-blushsoft/30 p-1.5 border-r border-b border-gray-150 min-h-[75px] transition cursor-pointer flex flex-col justify-between group">
+                        <div class="w-full">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold text-planner-charcoal/80 group-hover:text-planner-sage">${d}</span>
+                                ${hasReminder ? '<span class="w-1.5 h-1.5 rounded-full bg-planner-blush animate-pulse"></span>' : ''}
+                            </div>
+                            ${holidayBadge}
+                            <div class="text-[9px] text-planner-clay truncate leading-tight mt-0.5">
+                                ${truncatedContent}
+                            </div>
+                        </div>
+                    </div>
+                `);
+            }
+
+            // Remainder grid padding
+            const totalCells = cells.length;
+            const remaining = 42 - totalCells;
+            for (let i = 0; i < remaining; i++) {
+                cells.push(`<div class="bg-gray-50/40 p-1 border-r border-b border-gray-100/50 min-h-[75px]"></div>`);
+            }
+
+            right.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="border-b border-planner-sagesoft pb-2 mb-3 flex justify-between items-center">
+                            <h3 class="font-serif text-xl text-planner-charcoal">Monthly Spread Calendar</h3>
+                            <span class="text-xs text-planner-clay italic">Select dates to log schedule</span>
+                        </div>
+                        <div class="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden border border-gray-250">
+                            ${headersHTML}
+                            ${cells.join('')}
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] text-planner-clay/80 mt-2">
+                        <span>Interactive Holidays Configurator Active</span>
+                        <span>Academic Planner Suite</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function changeMonth(dir) {
+            let next = state.currentMonthIndex + dir;
+            if (next >= 0 && next < AcademicMonths.length) {
+                state.currentMonthIndex = next;
+                renderMonthly(document.getElementById('left-page-content'), document.getElementById('right-page-content'));
+            }
+        }
+
+        // Open custom planner appointment details inside date grids
+        function openDayModal(dayNum, key) {
+            const val = state.notesText[key] || "";
+            const currentMonthName = AcademicMonths[state.currentMonthIndex].name;
+            
+            const content = `
+                <div class="space-y-4">
+                    <h3 class="font-serif text-2xl text-planner-charcoal border-b border-planner-blush pb-2">${currentMonthName} - Day ${dayNum}</h3>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-planner-clay mb-2">Schedule Notes & Appointments</label>
+                        <textarea id="modal_text" class="w-full h-40 border border-planner-sagesoft p-3 rounded-xl outline-none focus:ring-2 focus:ring-planner-sage text-sm font-sans" placeholder="e.g. 10:30 AM Pediatric dentist; 4:00 PM staff syllabus reviews">${val}</textarea>
+                    </div>
+                    <div class="flex justify-end gap-3">
+                        <button onclick="closeModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-xs font-semibold text-gray-700 transition">Cancel</button>
+                        <button onclick="saveDayModal('${key}')" class="px-5 py-2 bg-planner-sage hover:bg-opacity-90 rounded-full text-xs font-semibold text-white transition shadow">Save Entry</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modal-content').innerHTML = content;
+            document.getElementById('plannerModal').classList.remove('hidden');
+        }
+
+        function saveDayModal(key) {
+            const updated = document.getElementById('modal_text').value;
+            state.notesText[key] = updated;
+            savePlanner(true);
+            closeModal();
+            renderMonthly(document.getElementById('left-page-content'), document.getElementById('right-page-content'));
+        }
+
+        function closeModal() {
+            document.getElementById('plannerModal').classList.add('hidden');
+        }
+
+        function openAddHolidayModal(monthIdx) {
+            const currentMonthName = AcademicMonths[monthIdx].name;
+            const maxDays = AcademicMonths[monthIdx].days;
+            
+            const content = `
+                <div class="space-y-4">
+                    <h3 class="font-serif text-2xl text-planner-charcoal border-b border-planner-blush pb-2">Add Holiday - ${currentMonthName}</h3>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="col-span-1">
+                            <label class="block text-xs font-bold uppercase tracking-widest text-planner-clay mb-2">Day Number</label>
+                            <input id="holiday_day" type="number" min="1" max="${maxDays}" class="w-full border border-planner-sagesoft p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-planner-sage text-sm text-center" value="1">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-bold uppercase tracking-widest text-planner-clay mb-2">Holiday Title</label>
+                            <input id="holiday_name" type="text" class="w-full border border-planner-sagesoft p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-planner-sage text-sm" placeholder="e.g. Independence Day">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3">
+                        <button onclick="closeModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-xs font-semibold text-gray-700 transition">Cancel</button>
+                        <button onclick="saveCustomHoliday(${monthIdx})" class="px-5 py-2 bg-planner-sage hover:bg-opacity-90 rounded-full text-xs font-semibold text-white transition shadow">Add Holiday</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modal-content').innerHTML = content;
+            document.getElementById('plannerModal').classList.remove('hidden');
+        }
+
+        function saveCustomHoliday(monthIdx) {
+            const dayInput = document.getElementById('holiday_day');
+            const nameInput = document.getElementById('holiday_name');
+            const day = parseInt(dayInput.value);
+            const name = nameInput.value.trim();
+            const maxDays = AcademicMonths[monthIdx].days;
+
+            if (isNaN(day) || day < 1 || day > maxDays) {
+                openCustomAlert("Invalid Date", `Please enter a valid day between 1 and ${maxDays}.`);
+                return;
+            }
+            if (!name) {
+                openCustomAlert("Missing Name", "Please enter a title/name for your custom holiday.");
+                return;
+            }
+
+            if (!state.holidays[monthIdx]) {
+                state.holidays[monthIdx] = [];
+            }
+
+            state.holidays[monthIdx].push({ day, name });
+            state.holidays[monthIdx].sort((a, b) => a.day - b.day);
+
+            savePlanner(true);
+            closeModal();
+            renderCurrentTab();
+            showToast("Holiday added successfully!");
+        }
+
+        function deleteHoliday(monthIdx, holIdx) {
+            if (state.holidays[monthIdx]) {
+                state.holidays[monthIdx].splice(holIdx, 1);
+                savePlanner(true);
+                renderCurrentTab();
+                showToast("Holiday removed!");
+            }
+        }
+
+        /* Weekly & Daily Harmonizer Engine */
+        function renderWeekly(left, right) {
+            // Left Page: Dividers, Multi-column planner days Monday, Tuesday, Wednesday, Thursday
+            left.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="border-b border-planner-blush pb-2 mb-4">
+                            <span class="text-[10px] font-bold tracking-widest text-planner-clay uppercase">Detailed Schedule</span>
+                            <h2 class="font-serif text-2xl text-planner-charcoal">Weekly Spreads (Part 1)</h2>
+                        </div>
+
+                        <!-- Mon to Thu detailed schedules -->
+                        <div class="space-y-4">
+                            ${renderWeeklyDayBlock('Monday', 'mon')}
+                            ${renderWeeklyDayBlock('Tuesday', 'tue')}
+                            ${renderWeeklyDayBlock('Wednesday', 'wed')}
+                            ${renderWeeklyDayBlock('Thursday', 'thu')}
+                        </div>
+                    </div>
+                    <div class="text-[10px] text-planner-clay/70 mt-3">Auto save schedules on typing</div>
+                </div>
+            `;
+
+            // Right Page: Friday, Weekend (Sat, Sun), Habit Tracker, Priorities list & Next Week block
+            right.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="border-b border-planner-sage pb-2 mb-4 flex justify-between items-center">
+                            <h3 class="font-serif text-xl text-planner-charcoal">Weekly Spreads (Part 2)</h3>
+                            <span class="text-xs bg-planner-blush text-white px-2 py-0.5 rounded uppercase tracking-wider text-[9px]">Weekly Focus</span>
+                        </div>
+
+                        <!-- Friday and Weekend Block -->
+                        <div class="space-y-3 mb-4">
+                            ${renderWeeklyDayBlock('Friday', 'fri')}
+                            <div class="grid grid-cols-2 gap-3">
+                                ${renderWeeklyDayBlock('Saturday', 'sat')}
+                                ${renderWeeklyDayBlock('Sunday', 'sun')}
+                            </div>
+                        </div>
+
+                        <!-- Habit tracking table inside the planner -->
+                        <div class="mb-4">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-planner-clay mb-1.5"><i class="fa-solid fa-seedling text-planner-sage"></i> Weekly Habit Tracker</p>
+                            <div class="bg-white/80 border border-gray-150 rounded-xl p-2 text-xs">
+                                <div class="grid grid-cols-8 gap-1 text-center font-semibold text-[9px] uppercase text-planner-clay border-b border-gray-100 pb-1 mb-1">
+                                    <div class="text-left font-bold text-planner-charcoal">Habit</div>
+                                    <div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div>
+                                </div>
+                                ${renderWeeklyHabitRow('Hydration (8 glasses)', 'habit_hydration')}
+                                ${renderWeeklyHabitRow('Meditation/Quiet time', 'habit_peace')}
+                                ${renderWeeklyHabitRow('Academic Reading', 'habit_reading')}
+                            </div>
+                        </div>
+
+                        <!-- Next Week Preview / Top Priorities -->
+                        <div class="bg-planner-blushsoft/20 p-2.5 rounded-lg border border-planner-blush/20">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-planner-clay mb-1">Top priorities & Next Week Preview</p>
+                            <textarea id="weekly_priorities" onblur="handleFieldBlur('weekly_priorities', this)" 
+                                class="w-full h-12 bg-transparent text-xs outline-none focus:ring-0 border-none resize-none font-sans" 
+                                placeholder="Write next week's focus areas, reminders, and top goals...">${state.notesText['weekly_priorities'] || ""}</textarea>
+                        </div>
+                    </div>
+                </div>
+            `;
+            initCheckboxes();
+        }
+
+        // Helper structure to design day schedule containers inside weekly layout
+        function renderWeeklyDayBlock(dayLabel, idSuffix) {
+            const scheduleKey = `weekly_sched_${dayLabel.toLowerCase()}`;
+            const textVal = state.notesText[scheduleKey] || "";
+            return `
+                <div class="bg-white/70 hover:bg-white p-2.5 rounded-xl border border-gray-150 transition">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-bold text-planner-sage uppercase tracking-wider">${dayLabel}</span>
+                        <span class="text-[9px] text-planner-clay font-serif italic">My Agenda</span>
+                    </div>
+                    <input id="${scheduleKey}" onblur="handleFieldBlur('${scheduleKey}', this)" type="text" 
+                        class="w-full bg-transparent border-none outline-none focus:ring-0 text-xs text-planner-charcoal placeholder-planner-clay/40" 
+                        placeholder="Type reminders, tasks, appointments..." value="${textVal}">
+                </div>
+            `;
+        }
+
+        // Habit grid rendering helper
+        function renderWeeklyHabitRow(habitLabel, storageId) {
+            let cols = '';
+            for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+                const habitKey = `${storageId}_day_${dayIndex}`;
+                const isChecked = state.checklistData[habitKey] || false;
+                cols += `
+                    <div class="flex justify-center items-center">
+                        <input type="checkbox" data-chk-key="${habitKey}" ${isChecked ? 'checked' : ''} class="w-3.5 h-3.5 text-planner-sage rounded border-gray-300 focus:ring-planner-sage cursor-pointer">
+                    </div>
+                `;
+            }
+            return `
+                <div class="grid grid-cols-8 gap-1 text-center py-1 border-b border-gray-50 last:border-0">
+                    <div class="text-[10px] text-left truncate text-planner-clay font-medium">${habitLabel}</div>
+                    ${cols}
+                </div>
+            `;
+        }
+
+        /* For Teachers & Students: The Academic Hub */
+        function renderAcademic(left, right) {
+            // Left Page: Interactive Semester overview / Class schedule
+            let classRowsHTML = state.schoolData.classes.map((cls, idx) => `
+                <tr class="border-b border-gray-100 last:border-none">
+                    <td class="py-2 text-[10px] font-bold text-planner-sage">${cls.time}</td>
+                    <td class="py-2 text-xs"><input onblur="updateClassSchedule(${idx}, 'mon', this.value)" type="text" class="w-full bg-transparent border-none focus:ring-0 p-0 text-xs text-planner-charcoal" value="${cls.mon}"></td>
+                    <td class="py-2 text-xs"><input onblur="updateClassSchedule(${idx}, 'tue', this.value)" type="text" class="w-full bg-transparent border-none focus:ring-0 p-0 text-xs text-planner-charcoal" value="${cls.tue}"></td>
+                    <td class="py-2 text-xs"><input onblur="updateClassSchedule(${idx}, 'wed', this.value)" type="text" class="w-full bg-transparent border-none focus:ring-0 p-0 text-xs text-planner-charcoal" value="${cls.wed}"></td>
+                    <td class="py-2 text-xs"><input onblur="updateClassSchedule(${idx}, 'thu', this.value)" type="text" class="w-full bg-transparent border-none focus:ring-0 p-0 text-xs text-planner-charcoal" value="${cls.thu}"></td>
+                    <td class="py-2 text-xs"><input onblur="updateClassSchedule(${idx}, 'fri', this.value)" type="text" class="w-full bg-transparent border-none focus:ring-0 p-0 text-xs text-planner-charcoal" value="${cls.fri}"></td>
+                </tr>
+            `).join('');
+
+            left.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="border-b border-planner-blush pb-2 mb-4">
+                            <span class="text-[10px] font-bold tracking-widest text-planner-clay uppercase">Academic Hub</span>
+                            <h2 class="font-serif text-2xl text-planner-charcoal">Term Timetable & Lessons</h2>
+                        </div>
+
+                        <!-- Class schedules table -->
+                        <div class="mb-5">
+                            <p class="text-xs font-bold uppercase tracking-widest text-planner-clay mb-2"><i class="fa-solid fa-clock-rotate-left"></i> Semester Block Timetable</p>
+                            <div class="bg-white/80 p-3 rounded-xl border border-gray-150 overflow-x-auto">
+                                <table class="w-full text-left border-collapse min-w-[320px]">
+                                    <thead>
+                                        <tr class="border-b border-gray-200 text-[10px] uppercase text-planner-clay font-bold">
+                                            <th class="pb-1.5">Time</th>
+                                            <th class="pb-1.5">M</th>
+                                            <th class="pb-1.5">T</th>
+                                            <th class="pb-1.5">W</th>
+                                            <th class="pb-1.5">Th</th>
+                                            <th class="pb-1.5">F</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${classRowsHTML}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Curriculum / Lesson Planner -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <p class="text-xs font-bold uppercase tracking-widest text-planner-clay"><i class="fa-solid fa-book-open"></i> Lesson Plan Blueprint</p>
+                                <button onclick="addNewLessonPlan()" class="text-[10px] text-planner-sage font-bold hover:underline">+ Add Unit</button>
+                            </div>
+                            <div class="space-y-2 max-h-[220px] overflow-y-auto planner-scroll pr-1">
+                                ${renderLessonPlans()}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Right Page: Assignments & Projects dynamic board
+            right.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="border-b border-planner-sage pb-2 mb-4 flex justify-between items-center">
+                            <h3 class="font-serif text-xl text-planner-charcoal">Assignment & Grading Board</h3>
+                            <button onclick="addAssignmentRow()" class="px-2.5 py-1 bg-planner-sage text-white rounded-full text-[10px] font-bold hover:bg-opacity-90 transition">+ Add Row</button>
+                        </div>
+
+                        <div class="bg-white/80 border border-gray-100 rounded-xl p-3 shadow-inner">
+                            <div class="max-h-[350px] overflow-y-auto planner-scroll">
+                                <table class="w-full text-left text-xs border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-gray-200 text-[9px] uppercase text-planner-clay font-bold">
+                                            <th class="pb-2">Assignment/Grading Task</th>
+                                            <th class="pb-2">Role</th>
+                                            <th class="pb-2">Due Date</th>
+                                            <th class="pb-2 w-20">Progress</th>
+                                            <th class="pb-2 text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="assignment-rows">
+                                        ${renderAssignmentRows()}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-[10px] text-planner-clay/70 mt-3 flex justify-between">
+                        <span>Teacher / Student Hybrid Portal</span>
+                        <span>Auto-calculation enabled</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateClassSchedule(idx, day, val) {
+            state.schoolData.classes[idx][day] = val;
+            savePlanner(true);
+        }
+
+        // Lesson planners builders
+        function renderLessonPlans() {
+            return state.schoolData.lessons.map((les, index) => `
+                <div class="bg-white p-2.5 rounded-lg border border-gray-150 text-xs">
+                    <div class="flex justify-between items-center mb-1 text-[10px] font-semibold text-planner-clay">
+                        <input onblur="updateLessonPlan(${index}, 'unit', this.value)" class="font-bold text-planner-charcoal bg-transparent border-none p-0 outline-none w-1/2" value="${les.unit}">
+                        <button onclick="deleteLessonPlan(${index})" class="text-rose-500 hover:underline">Delete</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                        <div>
+                            <span class="text-[9px] text-planner-clay block uppercase">Objective:</span>
+                            <textarea onblur="updateLessonPlan(${index}, 'objective', this.value)" class="w-full bg-transparent border border-gray-100 rounded p-1 text-[10px]" rows="2">${les.objective}</textarea>
+                        </div>
+                        <div>
+                            <span class="text-[9px] text-planner-clay block uppercase">Resources & Notes:</span>
+                            <textarea onblur="updateLessonPlan(${index}, 'resources', this.value)" class="w-full bg-transparent border border-gray-100 rounded p-1 text-[10px]" rows="2">${les.resources}</textarea>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateLessonPlan(index, field, value) {
+            state.schoolData.lessons[index][field] = value;
+            savePlanner(true);
+        }
+
+        function addNewLessonPlan() {
+            state.schoolData.lessons.push({
+                unit: "New Lesson Unit / Topic",
+                objective: "Goal objectives",
+                resources: "Lesson books or materials",
+                notes: ""
+            });
+            savePlanner(true);
+            renderCurrentTab();
+        }
+
+        function deleteLessonPlan(index) {
+            state.schoolData.lessons.splice(index, 1);
+            savePlanner(true);
+            renderCurrentTab();
+        }
+
+        // Assignment tables helpers
+        function renderAssignmentRows() {
+            return state.schoolData.assignments.map((asg, idx) => `
+                <tr class="border-b border-gray-100 last:border-none">
+                    <td class="py-2"><input onblur="updateAssignment(${idx}, 'name', this.value)" type="text" class="w-full bg-transparent border-none p-0 text-xs text-planner-charcoal" value="${asg.name}"></td>
+                    <td class="py-2">
+                        <select onchange="updateAssignment(${idx}, 'type', this.value)" class="bg-transparent border-none text-[10px] p-0 font-medium text-planner-charcoal">
+                            <option value="Teacher" ${asg.type === 'Teacher' ? 'selected' : ''}>Teacher</option>
+                            <option value="Student" ${asg.type === 'Student' ? 'selected' : ''}>Student</option>
+                            <option value="Home/Mom" ${asg.type === 'Home/Mom' ? 'selected' : ''}>Family</option>
+                        </select>
+                    </td>
+                    <td class="py-2"><input onblur="updateAssignment(${idx}, 'due', this.value)" type="date" class="bg-transparent border-none p-0 text-[10px] text-planner-charcoal" value="${asg.due}"></td>
+                    <td class="py-2">
+                        <div class="flex items-center gap-1.5">
+                            <input onblur="updateAssignment(${idx}, 'progress', parseInt(this.value))" type="number" class="w-8 bg-transparent border border-gray-150 text-[10px] rounded text-center p-0.5 text-planner-charcoal" value="${asg.progress}">
+                            <span class="text-[9px] text-planner-clay">%</span>
+                        </div>
+                    </td>
+                    <td class="py-2 text-right">
+                        <button onclick="deleteAssignmentRow(${idx})" class="text-rose-500 hover:text-rose-700 text-xs"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateAssignment(idx, field, value) {
+            state.schoolData.assignments[idx][field] = value;
+            savePlanner(true);
+        }
+
+        function addAssignmentRow() {
+            state.schoolData.assignments.push({
+                name: "New Syllabus/Project Task",
+                type: "Teacher",
+                due: "2026-10-31",
+                progress: 0,
+                status: "Planned"
+            });
+            savePlanner(true);
+            renderCurrentTab();
+        }
+
+        function deleteAssignmentRow(idx) {
+            state.schoolData.assignments.splice(idx, 1);
+            savePlanner(true);
+            renderCurrentTab();
+        }
+
+        /* For Busy Moms & Women: The Family Command Center */
+        function renderFamily(left, right) {
+            // Left Page: Medical logs, Kid forms checklist
+            let medRowsHTML = state.familyData.medicals.map((med, idx) => `
+                <tr class="border-b border-gray-100 last:border-none">
+                    <td><input onblur="updateMedicalLog(${idx}, 'person', this.value)" type="text" class="w-full bg-transparent border-none p-1 text-xs text-planner-charcoal" value="${med.person}"></td>
+                    <td><input onblur="updateMedicalLog(${idx}, 'event', this.value)" type="text" class="w-full bg-transparent border-none p-1 text-xs text-planner-charcoal" value="${med.event}"></td>
+                    <td><input onblur="updateMedicalLog(${idx}, 'date', this.value)" type="date" class="w-full bg-transparent border-none p-1 text-xs text-[10px] text-planner-charcoal" value="${med.date}"></td>
+                    <td class="text-right"><button onclick="deleteMedicalLog(${idx})" class="text-rose-500 hover:underline text-[10px]">Remove</button></td>
+                </tr>
+            `).join('');
+
+            let clothingRowsHTML = state.familyData.sizes.map((sz, idx) => `
+                <tr class="border-b border-gray-100 last:border-none">
+                    <td><input onblur="updateFamilySizes(${idx}, 'person', this.value)" type="text" class="w-full bg-transparent border-none p-1 text-xs font-semibold text-planner-charcoal" value="${sz.person}"></td>
+                    <td><input onblur="updateFamilySizes(${idx}, 'age', this.value)" type="text" class="w-full bg-transparent border-none p-1 text-xs text-planner-charcoal" value="${sz.age}"></td>
+                    <td><input onblur="updateFamilySizes(${idx}, 'clothes', this.value)" type="text" class="w-full bg-transparent border-none p-1 text-xs text-planner-charcoal" value="${sz.clothes}"></td>
+                    <td><input onblur="updateFamilySizes(${idx}, 'shoes', this.value)" type="text" class="w-full bg-transparent border-none p-1 text-xs text-planner-charcoal" value="${sz.shoes}"></td>
+                </tr>
+            `).join('');
+
+            left.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="border-b border-planner-blush pb-2 mb-4">
+                            <span class="text-[10px] font-bold tracking-widest text-planner-clay uppercase">Family Command Center</span>
+                            <h2 class="font-serif text-2xl text-planner-charcoal">Medical & Wardrobe Registers</h2>
+                        </div>
+
+                        <!-- Kid Clothing / Footwear sizes tracker -->
+                        <div class="mb-5">
+                            <p class="text-xs font-bold uppercase tracking-widest text-planner-clay mb-2"><i class="fa-solid fa-shirt"></i> Family Wardrobe & Shoe Sizes</p>
+                            <div class="bg-white/80 p-2.5 rounded-xl border border-gray-150">
+                                <table class="w-full text-left text-xs">
+                                    <thead>
+                                        <tr class="border-b border-gray-200 text-[10px] uppercase text-planner-clay font-bold">
+                                            <th class="p-1">Name</th>
+                                            <th class="p-1">Age</th>
+                                            <th class="p-1">Clothes Size</th>
+                                            <th class="p-1">Shoe Size</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${clothingRowsHTML}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Medical appointments log -->
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <p class="text-xs font-bold uppercase tracking-widest text-planner-clay"><i class="fa-solid fa-notes-medical"></i> Medical Log & Checkups</p>
+                                <button onclick="addMedicalLog()" class="text-[10px] text-planner-sage font-bold hover:underline">+ Add Entry</button>
+                            </div>
+                            <div class="bg-white/80 p-2.5 rounded-xl border border-gray-150">
+                                <table class="w-full text-left text-xs">
+                                    <thead>
+                                        <tr class="border-b border-gray-200 text-[10px] uppercase text-planner-clay font-bold">
+                                            <th class="p-1">Member</th>
+                                            <th class="p-1">Checkup/Dental/Vaccine</th>
+                                            <th class="p-1">Target Date</th>
+                                            <th class="p-1 text-right">Delete</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${medRowsHTML}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Right Page: Cleaning rotations checklist (Daily, Weekly, Monthly)
+            let dailyChoreRows = renderChoreRotation('Daily');
+            let weeklyChoreRows = renderChoreRotation('Weekly');
+            let monthlyChoreRows = renderChoreRotation('Monthly');
+
+            right.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="border-b border-planner-sage pb-2 mb-4">
+                            <h3 class="font-serif text-xl text-planner-charcoal">Chore & Zone Cleaning Rotations</h3>
+                        </div>
+
+                        <div class="space-y-4">
+                            <!-- Daily Routine -->
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-planner-sage mb-2 border-b border-planner-sage/20 pb-1">Daily Maintenance Ticks</p>
+                                <div class="space-y-1.5">
+                                    ${dailyChoreRows}
+                                </div>
+                            </div>
+
+                            <!-- Weekly Routine -->
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-planner-gold mb-2 border-b border-planner-gold/20 pb-1">Weekly Deep-Sweep</p>
+                                <div class="space-y-1.5">
+                                    ${weeklyChoreRows}
+                                </div>
+                            </div>
+
+                            <!-- Monthly Routine -->
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-planner-clay mb-2 border-b border-planner-clay/20 pb-1">Monthly Overhaul & Filters</p>
+                                <div class="space-y-1.5">
+                                    ${monthlyChoreRows}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-[10px] text-planner-clay/80 mt-3 italic text-right">
+                        Clicking checkboxes auto-saves home status logs.
+                    </div>
+                </div>
+            `;
+            initCheckboxes();
+        }
+
+        function updateMedicalLog(idx, field, value) {
+            state.familyData.medicals[idx][field] = value;
+            savePlanner(true);
+        }
+
+        function addMedicalLog() {
+            state.familyData.medicals.push({ person: "Child Name", event: "Pediatrician Checkup", date: "2026-10-25" });
+            savePlanner(true);
+            renderCurrentTab();
+        }
+
+        function deleteMedicalLog(idx) {
+            state.familyData.medicals.splice(idx, 1);
+            savePlanner(true);
+            renderCurrentTab();
+        }
+
+        function updateFamilySizes(idx, field, value) {
+            state.familyData.sizes[idx][field] = value;
+            savePlanner(true);
+        }
+
+        function renderChoreRotation(freq) {
+            return state.familyData.cleaning
+                .filter(item => item.frequency === freq)
+                .map((chore, idx) => {
+                    const uniqueId = `chore_${freq.toLowerCase()}_${idx}`;
+                    return `
+                        <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-gray-100 hover:shadow-sm transition">
+                            <span class="text-xs text-planner-charcoal/90">${chore.task}</span>
+                            ${renderInteractiveChecklist(uniqueId, '')}
+                        </div>
+                    `;
+                }).join('');
+        }
+
+        /* Meal Planning Matrix & Shopping List Creator */
+        function renderMeals(left, right) {
+            // Left Page: Grid of Mon-Sun Breakfast, Lunch, Dinner
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            let mealGridHTML = days.map(d => {
+                const bVal = state.mealsData.meals[`${d.toLowerCase()}_b`] || "";
+                const lVal = state.mealsData.meals[`${d.toLowerCase()}_l`] || "";
+                const dVal = state.mealsData.meals[`${d.toLowerCase()}_d`] || "";
+                return `
+                    <div class="grid grid-cols-4 gap-2 py-1.5 border-b border-gray-100 last:border-0 items-center font-sans">
+                        <span class="text-[10px] font-bold text-planner-sage uppercase tracking-wider">${d}</span>
+                        <input onblur="updateMealGrid('${d.toLowerCase()}_b', this.value)" type="text" class="bg-transparent border-none p-1 text-xs placeholder-planner-clay/30 text-planner-charcoal" placeholder="B: eggs..." value="${bVal}">
+                        <input onblur="updateMealGrid('${d.toLowerCase()}_l', this.value)" type="text" class="bg-transparent border-none p-1 text-xs placeholder-planner-clay/30 text-planner-charcoal" placeholder="L: salad..." value="${lVal}">
+                        <input onblur="updateMealGrid('${d.toLowerCase()}_d', this.value)" type="text" class="bg-transparent border-none p-1 text-xs placeholder-planner-clay/30 text-planner-charcoal" placeholder="D: salmon..." value="${dVal}">
+                    </div>
+                `;
+            }).join('');
+
+            left.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="border-b border-planner-blush pb-2 mb-4">
+                            <span class="text-[10px] font-bold tracking-widest text-planner-clay uppercase">Nutritional Sanctuary</span>
+                            <h2 class="font-serif text-2xl text-planner-charcoal">Weekly Meal Planning Matrix</h2>
+                        </div>
+
+                        <div class="bg-white/80 p-3 rounded-xl border border-gray-150">
+                            <div class="grid grid-cols-4 gap-2 font-bold text-[9px] uppercase text-planner-clay border-b border-gray-150 pb-1 mb-1 text-center">
+                                <div class="text-left">Day</div>
+                                <div>Breakfast</div>
+                                <div>Lunch</div>
+                                <div>Dinner</div>
+                            </div>
+                            <div class="max-h-[350px] overflow-y-auto planner-scroll">
+                                ${mealGridHTML}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Right Page: Dynamic Grocery Shopping list (Categorized with checkbox strike)
+            let groceryRowsHTML = state.mealsData.groceryList.map((item, idx) => `
+                <div class="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-none">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" data-chk-key="grocery_item_${item.id}" ${item.checked ? 'checked' : ''} onchange="toggleGroceryCheckbox(${item.id}, this.checked)" class="w-4 h-4 text-planner-sage rounded border-gray-300 focus:ring-planner-sage cursor-pointer">
+                        <span class="text-xs ${item.checked ? 'line-through text-gray-400 font-light' : 'text-planner-charcoal'}">${item.item}</span>
+                    </div>
+                    <button onclick="deleteGroceryItem(${item.id})" class="text-gray-300 hover:text-rose-500 transition text-[10px]"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            `).join('');
+
+            right.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="border-b border-planner-sage pb-2 mb-4 flex justify-between items-center">
+                            <h3 class="font-serif text-xl text-planner-charcoal">Family Grocery Basket</h3>
+                            <div class="flex gap-2">
+                                <input id="new-grocery-item" type="text" class="px-3 py-1 border border-planner-sagesoft rounded-full text-xs" placeholder="Add spinach, apples...">
+                                <button onclick="addGroceryItem()" class="px-3 py-1 bg-planner-sage text-white rounded-full text-[10px] font-bold hover:bg-opacity-90 transition">Add</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white/80 border border-gray-100 rounded-xl p-3 shadow-inner">
+                            <div class="max-h-[340px] overflow-y-auto planner-scroll pr-1">
+                                ${groceryRowsHTML || '<p class="text-xs italic text-gray-400 text-center py-6">Your basket is empty. Add pantry needs above.</p>'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-[10px] text-planner-clay mt-4 text-center">
+                        Grocery items stay tracked on your mobile device instantly.
+                    </div>
+                </div>
+            `;
+            initCheckboxes();
+        }
+
+        function updateMealGrid(key, val) {
+            state.mealsData.meals[key] = val;
+            savePlanner(true);
+        }
+
+        function toggleGroceryCheckbox(id, isChecked) {
+            const item = state.mealsData.groceryList.find(g => g.id === id);
+            if (item) {
+                item.checked = isChecked;
+                savePlanner(true);
+                renderCurrentTab();
+            }
+        }
+
+        function addGroceryItem() {
+            const input = document.getElementById('new-grocery-item');
+            const txt = input.value.trim();
+            if (txt) {
+                state.mealsData.groceryList.push({
+                    id: Date.now(),
+                    item: txt,
+                    checked: false
+                });
+                input.value = '';
+                savePlanner(true);
+                renderCurrentTab();
+            }
+        }
+
+        function deleteGroceryItem(id) {
+            state.mealsData.groceryList = state.mealsData.groceryList.filter(g => g.id !== id);
+            savePlanner(true);
+            renderCurrentTab();
+        }
+
+        /* Wellness & Mood Tracker Page Engine */
+        function renderWellness(left, right) {
+            // Left Page: Hydration cups trackers, Mood, Sleep log
+            let activeGlassesHTML = '';
+            for (let i = 1; i <= 8; i++) {
+                const isActive = state.wellnessData.hydration >= i;
+                activeGlassesHTML += `
+                    <button onclick="updateHydration(${i})" class="w-8 h-10 border border-sky-200 rounded-lg flex flex-col justify-end items-center pb-1 relative transition overflow-hidden shadow-sm hover:scale-105 ${isActive ? 'bg-sky-100 border-sky-400' : 'bg-white'}">
+                        <span class="text-[9px] font-bold text-sky-600 block z-10">${i}</span>
+                        <div class="absolute bottom-0 left-0 right-0 bg-sky-300 transition-all duration-300 pointer-events-none" style="height: ${isActive ? '100%' : '15%'}; opacity: 0.6;"></div>
+                    </button>
+                `;
+            }
+
+            left.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="border-b border-planner-blush pb-2 mb-4">
+                            <span class="text-[10px] font-bold tracking-widest text-planner-clay uppercase">Self-Care Ritual</span>
+                            <h2 class="font-serif text-2xl text-planner-charcoal">Daily Hydration & Rest Metrics</h2>
+                        </div>
+
+                        <!-- Water Cups -->
+                        <div class="mb-5">
+                            <p class="text-xs font-bold uppercase tracking-widest text-planner-clay mb-2"><i class="fa-solid fa-droplet text-sky-400"></i> Hydration Tracker (Target: 8 Glasses)</p>
+                            <div class="flex items-center gap-2 bg-sky-50/50 p-3 rounded-xl border border-sky-100">
+                                ${activeGlassesHTML}
+                            </div>
+                        </div>
+
+                        <!-- Mood Log Selector -->
+                        <div class="mb-5">
+                            <p class="text-xs font-bold uppercase tracking-widest text-planner-clay mb-2"><i class="fa-solid fa-face-smile text-planner-gold"></i> Mood Balance Log</p>
+                            <div class="grid grid-cols-4 gap-2">
+                                ${renderMoodBtn('happy', '😊 Radiantly Happy', 'bg-amber-50 text-amber-700 border-amber-300')}
+                                ${renderMoodBtn('peaceful', '🕊️ Calm / Balanced', 'bg-emerald-50 text-emerald-700 border-emerald-300')}
+                                ${renderMoodBtn('tired', '💤 Sluggish / Tired', 'bg-violet-50 text-violet-700 border-violet-300')}
+                                ${renderMoodBtn('stressed', '⚡ Busy / Overwhelmed', 'bg-rose-50 text-rose-700 border-rose-300')}
+                            </div>
+                        </div>
+
+                        <!-- Sleep slider -->
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-widest text-planner-clay mb-1.5"><i class="fa-solid fa-moon text-indigo-400"></i> Sleep Quality Rest Log</p>
+                            <div class="bg-indigo-50/30 p-3 rounded-xl border border-indigo-150">
+                                <div class="flex justify-between text-xs font-semibold mb-2 text-planner-charcoal">
+                                    <span>Target: 7-8 hrs</span>
+                                    <span class="text-indigo-600">${state.wellnessData.sleep} Hours</span>
+                                </div>
+                                <input type="range" min="4" max="10" step="0.5" value="${state.wellnessData.sleep}" oninput="updateSleepLog(this.value)" class="w-full accent-planner-sage bg-gray-200 rounded-lg cursor-pointer">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Right Page: Reflection log, Memories page, customizable journal block
+            right.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="border-b border-planner-sage pb-2 mb-4">
+                            <h3 class="font-serif text-xl text-planner-charcoal">Gratitude & Quiet Reflections</h3>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-planner-clay mb-1">Today I am profoundly grateful for...</p>
+                                <textarea id="wellness_gratitude" onblur="handleFieldBlur('wellness_gratitude', this)" 
+                                    class="w-full h-32 bg-white/80 border border-gray-150 rounded-xl p-3 text-xs outline-none focus:ring-1 focus:ring-planner-sage text-planner-charcoal" 
+                                    placeholder="Take 2 minutes to recognize positive, peaceful highlights of your day...">${state.notesText['wellness_gratitude'] || ""}</textarea>
+                            </div>
+
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-planner-clay mb-1">Weekly self-care wins, discoveries & memories</p>
+                                <textarea id="wellness_memories" onblur="handleFieldBlur('wellness_memories', this)" 
+                                    class="w-full h-32 bg-white/80 border border-gray-150 rounded-xl p-3 text-xs outline-none focus:ring-1 focus:ring-planner-sage text-planner-charcoal" 
+                                    placeholder="Log meaningful milestones or warm family memories to look back on...">${state.notesText['wellness_memories'] || ""}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateHydration(val) {
+            state.wellnessData.hydration = val;
+            savePlanner(true);
+            renderCurrentTab();
+        }
+
+        function updateSleepLog(val) {
+            state.wellnessData.sleep = parseFloat(val);
+            savePlanner(true);
+            renderCurrentTab();
+        }
+
+        function updateMood(moodName) {
+            state.wellnessData.mood = moodName;
+            savePlanner(true);
+            renderCurrentTab();
+        }
+
+        function renderMoodBtn(moodId, label, activeClasses) {
+            const isActive = state.wellnessData.mood === moodId;
+            return `
+                <button onclick="updateMood('${moodId}')" class="px-2.5 py-2.5 rounded-lg text-[10px] border text-center transition shadow-sm font-semibold ${isActive ? activeClasses + ' scale-105 border-2 font-bold' : 'bg-white text-planner-clay border-gray-100 hover:bg-gray-50'}">
+                    ${label}
+                </button>
+            `;
+        }
+
+        /* Financial Freedom Ledger */
+        function renderFinance(left, right) {
+            // Left Page: Income Ledger
+            let incomeRowsHTML = state.financialData.income.map((inc, idx) => `
+                <tr class="border-b border-gray-100 last:border-none">
+                    <td><input onblur="updateFinancialItem('income', ${idx}, 'desc', this.value)" type="text" class="w-full bg-transparent border-none p-1 text-xs text-planner-charcoal" value="${inc.desc}"></td>
+                    <td><input onblur="updateFinancialItem('income', ${idx}, 'amt', parseFloat(this.value))" type="number" class="w-20 bg-transparent border-none p-1 text-xs text-right font-semibold text-planner-charcoal" value="${inc.amt}"></td>
+                    <td class="text-right"><button onclick="deleteFinancialItem('income', ${idx})" class="text-rose-500 hover:underline text-[10px]">Delete</button></td>
+                </tr>
+            `).join('');
+
+            // Calculate totals
+            const totalInc = state.financialData.income.reduce((sum, item) => sum + item.amt, 0);
+            const totalExp = state.financialData.expense.reduce((sum, item) => sum + item.amt, 0);
+            const balance = totalInc - totalExp;
+
+            left.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="border-b border-planner-blush pb-2 mb-4 flex justify-between items-center">
+                            <div>
+                                <span class="text-[10px] font-bold tracking-widest text-planner-clay uppercase">Financial Wellness</span>
+                                <h2 class="font-serif text-2xl text-planner-charcoal">Monthly Income Tracker</h2>
+                            </div>
+                            <button onclick="addFinancialItem('income')" class="px-2.5 py-1 bg-planner-sage text-white rounded-full text-[10px] font-bold hover:bg-opacity-90 transition">+ Add Income</button>
+                        </div>
+
+                        <!-- Income Ledger Table -->
+                        <div class="bg-white/80 p-2.5 rounded-xl border border-gray-150 mb-5">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr class="border-b border-gray-200 text-[10px] uppercase text-planner-clay font-bold">
+                                        <th class="p-1">Description</th>
+                                        <th class="p-1 text-right">Amount ($)</th>
+                                        <th class="p-1 text-right">Delete</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${incomeRowsHTML}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Savings thermometer metric -->
+                        <div class="bg-amber-50/40 p-4 rounded-xl border border-amber-100">
+                            <p class="text-xs font-bold uppercase tracking-widest text-planner-clay mb-2"><i class="fa-solid fa-piggy-bank text-planner-gold"></i> Savings Goal Thermometer</p>
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-xs text-planner-charcoal">
+                                    <span>Goal: $${state.financialData.savingsGoal}</span>
+                                    <span class="font-bold text-planner-gold">Saved: $${state.financialData.savingsCurrent}</span>
+                                </div>
+                                <div class="w-full h-3.5 bg-gray-200 rounded-full overflow-hidden relative">
+                                    <div class="bg-planner-gold h-full rounded-full transition-all duration-500" style="width: ${Math.min((state.financialData.savingsCurrent / state.financialData.savingsGoal) * 100, 100)}%"></div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <input onblur="state.financialData.savingsCurrent = parseFloat(this.value); savePlanner(true); renderCurrentTab();" type="number" class="w-1/2 p-1 text-xs border border-gray-200 rounded text-center text-planner-charcoal" placeholder="Modify Current" value="${state.financialData.savingsCurrent}">
+                                    <input onblur="state.financialData.savingsGoal = parseFloat(this.value); savePlanner(true); renderCurrentTab();" type="number" class="w-1/2 p-1 text-xs border border-gray-200 rounded text-center text-planner-charcoal" placeholder="Modify Goal" value="${state.financialData.savingsGoal}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Right Page: Expense Ledger & Cash flow summary stats
+            let expenseRowsHTML = state.financialData.expense.map((exp, idx) => `
+                <tr class="border-b border-gray-100 last:border-none">
+                    <td><input onblur="updateFinancialItem('expense', ${idx}, 'desc', this.value)" type="text" class="w-full bg-transparent border-none p-1 text-xs text-planner-charcoal" value="${exp.desc}"></td>
+                    <td><input onblur="updateFinancialItem('expense', ${idx}, 'amt', parseFloat(this.value))" type="number" class="w-20 bg-transparent border-none p-1 text-xs text-right font-semibold text-planner-charcoal" value="${exp.amt}"></td>
+                    <td class="text-right"><button onclick="deleteFinancialItem('expense', ${idx})" class="text-rose-500 hover:underline text-[10px]">Delete</button></td>
+                </tr>
+            `).join('');
+
+            right.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="border-b border-planner-sage pb-2 mb-4 flex justify-between items-center">
+                            <h3 class="font-serif text-xl text-planner-charcoal">Monthly Expense ledger</h3>
+                            <button onclick="addFinancialItem('expense')" class="px-2.5 py-1 bg-planner-sage text-white rounded-full text-[10px] font-bold hover:bg-opacity-90 transition">+ Add Expense</button>
+                        </div>
+
+                        <!-- Expense Table -->
+                        <div class="bg-white/80 p-2.5 rounded-xl border border-gray-150 mb-5">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr class="border-b border-gray-200 text-[10px] uppercase text-planner-clay font-bold">
+                                        <th class="p-1">Description</th>
+                                        <th class="p-1 text-right">Amount ($)</th>
+                                        <th class="p-1 text-right">Delete</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${expenseRowsHTML}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Financial Summary Box -->
+                        <div class="bg-planner-sagesoft/30 p-3 rounded-xl border border-planner-sage/20 text-xs">
+                            <p class="font-bold text-planner-sage uppercase tracking-wider mb-2">Monthly Cashflow Statement</p>
+                            <div class="grid grid-cols-3 gap-2 text-center">
+                                <div class="bg-white/70 p-2 rounded-lg border border-gray-100">
+                                    <span class="block text-[10px] text-planner-clay uppercase">Inflow</span>
+                                    <span class="text-sm font-bold text-emerald-600">$${totalInc}</span>
+                                </div>
+                                <div class="bg-white/70 p-2 rounded-lg border border-gray-100">
+                                    <span class="block text-[10px] text-planner-clay uppercase">Outflow</span>
+                                    <span class="text-sm font-bold text-rose-500">$${totalExp}</span>
+                                </div>
+                                <div class="bg-white/70 p-2 rounded-lg border border-gray-100">
+                                    <span class="block text-[10px] text-planner-clay uppercase">Net Cash</span>
+                                    <span class="text-sm font-bold ${balance >= 0 ? 'text-planner-sage' : 'text-rose-700'}">$${balance}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateFinancialItem(type, idx, field, value) {
+            state.financialData[type][idx][field] = value;
+            savePlanner(true);
+            renderCurrentTab(); // Refresh to recalculate values dynamically
+        }
+
+        function addFinancialItem(type) {
+            state.financialData[type].push({ desc: "New item label", amt: 0 });
+            savePlanner(true);
+            renderCurrentTab();
+        }
+
+        function deleteFinancialItem(type, idx) {
+            state.financialData[type].splice(idx, 1);
+            savePlanner(true);
+            renderCurrentTab();
+        }
+
+        /* Notes Page Templates (Dotted, Lined, Grid with Sketch Canvas Toggle) */
+        function renderNotes(left, right) {
+            // Left Page: Template Selector, Instructions & custom password keeper block
+            left.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="border-b border-planner-blush pb-2 mb-4">
+                            <span class="text-[10px] font-bold tracking-widest text-planner-clay uppercase">Blank Canvas</span>
+                            <h2 class="font-serif text-2xl text-planner-charcoal">Paper Templates & Keepsakes</h2>
+                        </div>
+
+                        <!-- Template Switcher Buttons -->
+                        <div class="mb-5">
+                            <p class="text-xs font-bold uppercase tracking-widest text-planner-clay mb-2">Select Page Style Theme</p>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button onclick="setPageTemplate('lined')" class="px-3 py-2 bg-white rounded-lg border border-gray-150 text-xs font-medium hover:bg-planner-blushsoft text-planner-charcoal">Lined Margin</button>
+                                <button onclick="setPageTemplate('dotted')" class="px-3 py-2 bg-white rounded-lg border border-gray-150 text-xs font-medium hover:bg-planner-blushsoft text-planner-charcoal">Dotted Grid</button>
+                                <button onclick="setPageTemplate('grid')" class="px-3 py-2 bg-white rounded-lg border border-gray-150 text-xs font-medium hover:bg-planner-blushsoft text-planner-charcoal">Engineer Grid</button>
+                            </div>
+                        </div>
+
+                        <!-- Password Keeper / Gift Tracker Block -->
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-widest text-planner-clay mb-2"><i class="fa-solid fa-gift"></i> Gift Ideas & Holiday Planning</p>
+                            <textarea id="notes_gifts" onblur="handleFieldBlur('notes_gifts', this)" 
+                                class="w-full h-32 bg-white/80 border border-gray-150 rounded-xl p-3 text-xs outline-none focus:ring-1 focus:ring-planner-sage text-planner-charcoal" 
+                                placeholder="Jot down family birthdays, secret gift wishes, holiday meal targets...">${state.notesText['notes_gifts'] || ""}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="bg-planner-blushsoft/40 p-2.5 rounded-lg border border-planner-blush/20 text-[10px] text-planner-clay leading-relaxed">
+                        💡 <strong>Interactive Pen Overlay:</strong> Toggle "Doodle Mode" at the top header to draw anywhere on your screen.
+                    </div>
+                </div>
+            `;
+
+            // Right Page: Fluid paper text writing area reflecting selected template texture
+            right.innerHTML = `
+                <div class="flex flex-col h-full justify-between">
+                    <div class="h-full flex flex-col justify-between">
+                        <div class="border-b border-planner-sage pb-2 mb-3 flex justify-between items-center">
+                            <h3 class="font-serif text-xl text-planner-charcoal">Free Writing Pad</h3>
+                            <span class="text-[9px] bg-planner-sage text-white px-2 py-0.5 rounded font-bold uppercase" id="selected-template-badge">Lined</span>
+                        </div>
+
+                        <!-- Sandbox Writing Notebook Surface -->
+                        <div id="notebook-surface" class="flex-1 bg-white p-4 rounded-xl shadow-inner border border-gray-150 overflow-y-auto page-lined min-h-[350px]">
+                            <textarea id="notes_sandbox" onblur="handleFieldBlur('notes_sandbox', this)" 
+                                class="w-full h-full bg-transparent border-none outline-none focus:ring-0 text-sm leading-relaxed placeholder-planner-clay/30 text-planner-charcoal" 
+                                style="line-height: inherit; font-size: inherit;"
+                                placeholder="Begin typing your memoirs, brainstorm summaries, recipes, class notes, or daily diary logs here...">${state.notesText['notes_sandbox'] || ""}</textarea>
+                        </div>
+                    </div>
+                </div>
+            `;
+            // Recall selected design page template state if present
+            setPageTemplate(state.notesText['active_template'] || 'lined');
+        }
+
+        function setPageTemplate(theme) {
+            state.notesText['active_template'] = theme;
+            savePlanner(true);
+
+            const surface = document.getElementById('notebook-surface');
+            const badge = document.getElementById('selected-template-badge');
+            if (surface) {
+                surface.classList.remove('page-lined', 'page-grid', 'page-dotted');
+                surface.classList.add(`page-${theme}`);
+            }
+            if (badge) {
+                badge.innerText = theme.charAt(0).toUpperCase() + theme.slice(1);
+            }
+        }
+
+        // Helper: Generates beautiful consistent checkbox with striking line transition
+        function renderInteractiveChecklist(key, defaultLabel) {
+            const isChecked = state.checklistData[key] || false;
+            return `
+                <label class="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" data-chk-key="${key}" ${isChecked ? 'checked' : ''} class="w-4 h-4 text-planner-sage rounded border-gray-300 focus:ring-planner-sage cursor-pointer">
+                    <span class="text-xs transition text-planner-charcoal ${isChecked ? 'line-through text-gray-400 font-light' : ''}">${defaultLabel}</span>
+                </label>
+            `;
+        }
+
+        // Initialize and bind checklists change event listeners
+        function initCheckboxes() {
+            document.querySelectorAll('input[type="checkbox"][data-chk-key]').forEach(chk => {
+                chk.addEventListener('change', (e) => {
+                    const key = e.target.getAttribute('data-chk-key');
+                    const checked = e.target.checked;
+                    handleCheckboxToggle(key, checked);
+                    
+                    // Add line-through style to label text next to checkbox
+                    const labelSpan = e.target.nextElementSibling;
+                    if (labelSpan && labelSpan.tagName === 'SPAN') {
+                        if (checked) {
+                            labelSpan.classList.add('line-through', 'text-gray-400', 'font-light');
+                        } else {
+                            labelSpan.classList.remove('line-through', 'text-gray-400', 'font-light');
+                        }
+                    }
+                });
+            });
+        }
+
+        /* Pure Custom MODAL alert / confirm logic to avoid browser popups */
+        function openCustomAlert(title, message) {
+            const modal = document.getElementById('plannerModal');
+            const content = document.getElementById('modal-content');
+            content.innerHTML = `
+                <div class="text-center space-y-4">
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-50 text-planner-gold mb-2 text-xl">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                    </div>
+                    <h3 class="font-serif text-2xl text-planner-charcoal">${title}</h3>
+                    <p class="text-sm text-planner-clay/90">${message}</p>
+                    <div class="pt-2">
+                        <button onclick="closeModal()" class="px-6 py-2 bg-planner-sage hover:bg-opacity-90 text-white font-medium text-xs rounded-full shadow transition">OK</button>
+                    </div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        function openCustomConfirm(title, message, callback) {
+            const modal = document.getElementById('plannerModal');
+            const content = document.getElementById('modal-content');
+            content.innerHTML = `
+                <div class="text-center space-y-4">
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-rose-50 text-rose-500 mb-2 text-xl">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </div>
+                    <h3 class="font-serif text-2xl text-planner-charcoal">${title}</h3>
+                    <p class="text-sm text-planner-clay/90">${message}</p>
+                    <div class="flex justify-center gap-3 pt-2">
+                        <button onclick="closeModal()" class="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-planner-clay font-medium text-xs rounded-full transition">Cancel</button>
+                        <button id="modal-confirm-btn" class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-medium text-xs rounded-full shadow transition">Proceed</button>
+                    </div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+            document.getElementById('modal-confirm-btn').onclick = function() {
+                callback();
+                closeModal();
+            }
+        }
+
+        /* Interactive Pencil Canvas (GoodNotes Overlay Style) */
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let penColor = '#8A9A86';
+        let penWidth = 2;
+        let isPenActive = false;
+        let ctx = null;
+
+        function toggleCanvasDraw() {
+            const container = document.getElementById('canvasContainer');
+            const penBtn = document.getElementById('penBtn');
+            const canvas = document.getElementById('doodleCanvas');
+            
+            isPenActive = !isPenActive;
+            if (isPenActive) {
+                container.classList.remove('hidden');
+                penBtn.classList.remove('bg-white');
+                penBtn.classList.add('bg-planner-sagesoft');
+                penBtn.innerHTML = `<i class="fa-solid fa-pen-nib text-planner-sage"></i> <span>Doodle Mode: Active</span>`;
+                setupCanvas(canvas);
+            } else {
+                container.classList.add('hidden');
+                penBtn.classList.remove('bg-planner-sagesoft');
+                penBtn.classList.add('bg-white');
+                penBtn.innerHTML = `<i class="fa-solid fa-pen-nib text-planner-sage"></i> <span>Doodle Mode: Off</span>`;
+            }
+        }
+
+        function setupCanvas(canvas) {
+            ctx = canvas.getContext('2d');
+            
+            // Adjust to visual size of current screen
+            canvas.width = canvas.parentElement.offsetWidth;
+            canvas.height = canvas.parentElement.offsetHeight;
+
+            // Draw saved lines if any exists
+            const savedDrawings = localStorage.getItem('symphony_planner_drawings');
+            if (savedDrawings) {
+                const img = new Image();
+                img.onload = function() {
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = savedDrawings;
+            }
+
+            // Bind interactions (Desktop + Touch adaptation)
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+
+            canvas.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                canvas.dispatchEvent(mouseEvent);
+            }, { passive: true });
+
+            canvas.addEventListener('touchmove', (e) => {
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousemove', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                canvas.dispatchEvent(mouseEvent);
+            }, { passive: true });
+
+            canvas.addEventListener('touchend', () => {
+                const mouseEvent = new MouseEvent('mouseup', {});
+                canvas.dispatchEvent(mouseEvent);
+            }, { passive: true });
+        }
+
+        // Handle canvas auto-rescaling smoothly
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('doodleCanvas');
+            if (canvas && isPenActive) {
+                // Temporary store drawings before resize
+                const tempDrawing = canvas.toDataURL();
+                canvas.width = canvas.parentElement.offsetWidth;
+                canvas.height = canvas.parentElement.offsetHeight;
+                
+                const img = new Image();
+                img.onload = function() {
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = tempDrawing;
+            }
+        });
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const canvas = document.getElementById('doodleCanvas');
+            const rect = canvas.getBoundingClientRect();
+            lastX = e.clientX - rect.left;
+            lastY = e.clientY - rect.top;
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const canvas = document.getElementById('doodleCanvas');
+            const rect = canvas.getBoundingClientRect();
+            const currentX = e.clientX - rect.left;
+            const currentY = e.clientY - rect.top;
+
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(currentX, currentY);
+            ctx.strokeStyle = penColor;
+            ctx.lineWidth = penWidth;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            lastX = currentX;
+            lastY = currentY;
+        }
+
+        function stopDrawing() {
+            if (isDrawing) {
+                isDrawing = false;
+                const canvas = document.getElementById('doodleCanvas');
+                // Persist drawing content
+                localStorage.setItem('symphony_planner_drawings', canvas.toDataURL());
+            }
+        }
+
+        function setPenColor(color) {
+            penColor = color;
+        }
+
+        function setPenWidth(width) {
+            penWidth = width;
+        }
+
+        function clearCanvas() {
+            const canvas = document.getElementById('doodleCanvas');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            localStorage.removeItem('symphony_planner_drawings');
+            showToast("Canvas drawings cleared!");
+        }
+
+        // Initialize application window
+        window.onload = function () {
+            loadPlannerData();
+            switchTab(state.currentTab);
+        };
+    </script>
+</body>
+</html>
